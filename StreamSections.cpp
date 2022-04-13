@@ -102,18 +102,27 @@ int PAT::GetProgramSectionSize() const
            ) / 8;
 }
 
-void PAT::AddPrograms(std::stringstream& ss,
-                      std::set<unsigned long>& programs_PIDs)
+bool PAT::Set(std::stringstream& ss)
 {
     SetStartTable(ss);
     if (table_id != TABLE_ID::TABLE_PAT)
-        return;
+        return false;
     ss >> transport_stream_id;
     ss >> reserved0;
     ss >> version_number;
     ss >> current_next_indicator;
     ss >> section_number;
     ss >> last_section_number; 
+
+    return true;
+}
+
+void PAT::AddPrograms(std::stringstream& ss,
+                      std::set<unsigned long>& programs_PIDs)
+{
+    bool ok = Set(ss);
+    if (!ok)
+        return;
 
     int section_size = GetProgramSectionSize();
     for (; section_size > 0; section_size -= 4) {
@@ -130,13 +139,11 @@ void PAT::AddPrograms(std::stringstream& ss,
     ss >> CRC_32;
 }
 
-void PMT::PrintES_Info(std::stringstream& ss,
-                       std::set<unsigned long>& programs_PIDs,
-                       std::set<unsigned long>& es_set)
+bool PMT::Set(std::stringstream& ss)
 {
     SetStartTable(ss);
     if (table_id != TABLE_ID::TABLE_PMT)
-        return;
+        return false;
     ss >> program_number;
     ss >> reserved0;
     ss >> version_number;
@@ -153,6 +160,17 @@ void PMT::PrintES_Info(std::stringstream& ss,
     ss >> elementary_PID;
     ss >> reserved4;
     ss >> ES_info_length;
+
+    return true;
+}
+
+void PMT::PrintES_Info(std::stringstream& ss,
+                       std::set<unsigned long>& programs_PIDs,
+                       std::set<unsigned long>& es_set)
+{
+    bool ok = Set(ss);
+    if (!ok)
+        return;
 
     auto program_search = programs_PIDs.find(program_number.to_ulong());
     if (program_search != programs_PIDs.end()) {

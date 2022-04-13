@@ -31,7 +31,7 @@ enum ADAPT {
 class StreamSection {
 public:
     virtual ~StreamSection() = default;
-    virtual bool Set(std::stringstream& ss) { return true; };
+    virtual bool Set(std::stringstream& ss) = 0;
     void SkipBytes(std::stringstream& ss, unsigned long len);
     void RevertBytes(std::stringstream& ss, unsigned long capacity);
 };
@@ -108,6 +108,7 @@ class PAT : public PSI {
 
     std::bitset<32> CRC_32;
 public:
+    virtual bool Set(std::stringstream& ss);
     virtual int GetProgramSectionSize() const;
     void PrintPrograms() const;
     void AddPrograms(std::stringstream& ss,
@@ -137,6 +138,7 @@ class PMT : public PSI {
 private:
     void Print() const;
 public:
+    virtual bool Set(std::stringstream& ss);
     virtual int GetProgramSectionSize() const;
     int GetNestedSectionSize() const;
     void PrintES_Info(std::stringstream& ss,
