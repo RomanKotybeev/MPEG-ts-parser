@@ -18,7 +18,7 @@ public:
     ~TS_Packet();
 public:
     void PrintHeader() const;
-    void FindPAT(std::stringstream& ss,
+    PACKRES FindPAT(std::stringstream& ss,
                  std::set<unsigned long>& programs_PIDs);
     void FindPMT(std::stringstream& ss,
                  std::set<unsigned long>& programs_PIDs,

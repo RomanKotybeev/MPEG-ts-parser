@@ -17,17 +17,23 @@ TS_Packet::~TS_Packet()
     if (pmt) delete pmt;
 }
 
-void TS_Packet::FindPAT(std::stringstream& ss,
+PACKRES TS_Packet::FindPAT(std::stringstream& ss,
                         std::set<unsigned long>& programs_PIDs)
 {
     bool ok = ph->Set(ss);
     if (!ok)
-        return;
-    if (ph->HasPayloadIndicator()) {
+        return PACKRES::NOT_TABLE;
+
+    if (ph->GetSyncByte() != 0x47)
+        return PACKRES::NOT_SYNC_BYTE;
+
+    if (ph->HasPayloadIndicator())
         psi->Set(ss);
-    }
+
     if (ph->IsPAT())
         pat->AddPrograms(ss, programs_PIDs);
+
+    return PACKRES::PAT_OR_PMT;
 }
 
 void TS_Packet::FindPMT(std::stringstream& ss,
@@ -37,9 +43,14 @@ void TS_Packet::FindPMT(std::stringstream& ss,
     bool ok = ph->Set(ss);
     if (!ok)
         return;
-    if (ph->HasPayloadIndicator()) {
+
+    auto search = programs_PIDs.find(ph->GetPID());
+    if (search == programs_PIDs.end())
+        return;
+
+    if (ph->HasPayloadIndicator())
         psi->Set(ss);
-    }
+
     if (ph->IsInRange())
         pmt->PrintES_Info(ss, programs_PIDs, es_set);
 }
