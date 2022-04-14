@@ -17,5 +17,5 @@ And pass the file as argument with option `-f`:
 Or pass the multicast group as argument with option `-m`:
 
 ```bash
-./parser -m 225.1.1.1
+./parser -m 225.1.1.1:5000
 ```
