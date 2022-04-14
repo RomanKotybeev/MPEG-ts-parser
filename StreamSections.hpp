@@ -28,9 +28,9 @@ enum ADAPT {
 };
 
 enum PACKRES {
+    INVALID,
     NOT_TABLE,
-    NOT_SYNC_BYTE,
-    PAT_OR_PMT,
+    SYNC_BYTE = 0x47,
 };
 
 class StreamSection {

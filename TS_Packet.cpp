@@ -24,8 +24,8 @@ PACKRES TS_Packet::FindPAT(std::stringstream& ss,
     if (!ok)
         return PACKRES::NOT_TABLE;
 
-    if (ph->GetSyncByte() != 0x47)
-        return PACKRES::NOT_SYNC_BYTE;
+    if (ph->GetSyncByte() != PACKRES::SYNC_BYTE)
+        return PACKRES::INVALID;
 
     if (ph->HasPayloadIndicator())
         psi->Set(ss);
@@ -33,7 +33,7 @@ PACKRES TS_Packet::FindPAT(std::stringstream& ss,
     if (ph->IsPAT())
         pat->AddPrograms(ss, programs_PIDs);
 
-    return PACKRES::PAT_OR_PMT;
+    return PACKRES::SYNC_BYTE;
 }
 
 void TS_Packet::FindPMT(std::stringstream& ss,

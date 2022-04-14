@@ -13,7 +13,7 @@ int TS_Parser::Parse() {
     while (0 != (rc = read(fd, buffer, PACKET_SIZE))) {
         BinaryRepresentation(rc);
         PACKRES res = packet->FindPAT(ss, programs_PIDs);
-        if (res == PACKRES::NOT_SYNC_BYTE)
+        if (res != PACKRES::SYNC_BYTE)
             lseek(fd, 0, SEEK_SET); // To begining
     }
     
