@@ -1,16 +1,16 @@
 #include "StreamSections.hpp"
 
 
-void StreamSection::SkipBytes(std::stringstream& ss, unsigned long len)
+void StreamSection::SkipBytes(std::stringstream& ss, ulong len)
 {
-    unsigned long offset = (unsigned long) ss.tellg() + len;
+    ulong offset = (ulong) ss.tellg() + len;
     ss.seekg(offset);
 }
 
 void StreamSection::RevertBytes(std::stringstream& ss,
-                                unsigned long capacity)
+                                ulong capacity)
 {
-    unsigned long offset = (unsigned long) ss.tellg() - capacity;
+    ulong offset = (ulong) ss.tellg() - capacity;
     ss.seekg(offset);
 }
 
@@ -90,6 +90,24 @@ void PSI::SetStartTable(std::stringstream& ss)
     ss >> section_length;
 }
 
+PAT::PAT(const PAT *pat)
+{
+    transport_stream_id    = pat->transport_stream_id;
+    reserved0              = pat->reserved0;
+    version_number         = pat->version_number;
+    current_next_indicator = pat->current_next_indicator;
+    section_number         = pat->section_number;
+    last_section_number    = pat->last_section_number; 
+    program_number         = pat->program_number;
+    program_map_PID        = pat->program_map_PID;
+}
+
+void PAT::CheckAndAdd(std::map<ulong, PAT*>& pat_map, ulong pmid)
+{
+    if (pat_map.find(pmid) == pat_map.end())
+        pat_map.insert(std::pair<ulong, PAT*>{pmid, new PAT(this)});
+}
+
 int PAT::GetProgramSectionSize() const
 {
     return section_length.to_ulong()
@@ -119,7 +137,7 @@ bool PAT::Set(std::stringstream& ss)
 }
 
 void PAT::AddPrograms(std::stringstream& ss,
-                      std::set<unsigned long>& programs_PIDs)
+                      std::map<ulong, PAT*>& pat_map)
 {
     bool ok = Set(ss);
     if (!ok)
@@ -134,10 +152,22 @@ void PAT::AddPrograms(std::stringstream& ss,
         }
         else {
             ss >> program_map_PID;
-            programs_PIDs.insert(program_map_PID.to_ulong());
+            CheckAndAdd(pat_map, program_map_PID.to_ulong());
         }
     }
     ss >> CRC_32;
+}
+
+void PAT::Print() const
+{
+    std::cout << "Program number: "
+              << program_number.to_ulong() << '\n';
+    std::cout << "Section length: "
+              << section_length.to_ulong() << '\n';
+    std::cout << "Transport stream id: "
+              << transport_stream_id.to_ulong() << '\n';
+    std::cout << "Program map PID: "
+              << program_map_PID.to_ulong() << '\n';
 }
 
 bool PMT::Set(std::stringstream& ss)
@@ -162,8 +192,7 @@ bool PMT::Set(std::stringstream& ss)
 }
 
 void PMT::PrintES_Info(std::stringstream& ss,
-                       std::set<unsigned long>& programs_PIDs,
-                       std::set<unsigned long>& es_set)
+                       std::set<ulong>& es_set)
 {
     bool ok = Set(ss);
     if (!ok)

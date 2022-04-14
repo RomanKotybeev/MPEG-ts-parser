@@ -5,7 +5,7 @@
 #include <sstream>
 #include <bitset>
 #include <set>
-#include <vector>
+#include <map>
 
 
 enum {
@@ -37,8 +37,8 @@ class StreamSection {
 public:
     virtual ~StreamSection() = default;
     virtual bool Set(std::stringstream& ss) = 0;
-    void SkipBytes(std::stringstream& ss, unsigned long len);
-    void RevertBytes(std::stringstream& ss, unsigned long capacity);
+    void SkipBytes(std::stringstream& ss, ulong len);
+    void RevertBytes(std::stringstream& ss, ulong capacity);
 };
 
 
@@ -70,10 +70,10 @@ public:
 
     bool HasPayloadIndicator() const
         { return payload_unit_start_indicator == 1; }
-    unsigned long GetCC() const
+    ulong GetCC() const
         { return continuity_counter.to_ulong(); }
-    unsigned long GetPID() const { return PID.to_ulong(); }
-    unsigned long GetSyncByte() const { return sync_byte.to_ulong(); }
+    ulong GetPID() const { return PID.to_ulong(); }
+    ulong GetSyncByte() const { return sync_byte.to_ulong(); }
 
     // Print all bits
     void Print() const;
@@ -114,12 +114,16 @@ class PAT : public PSI {
     std::bitset<13> program_map_PID;
 
     std::bitset<32> CRC_32;
-public:
-    virtual bool Set(std::stringstream& ss);
+private:
+    void CheckAndAdd(std::map<ulong, PAT*>& pat_map, ulong pmid);
     virtual int GetProgramSectionSize() const;
-    void PrintPrograms() const;
+public:
+    PAT() = default;
+    PAT(const PAT *pat);
+    virtual bool Set(std::stringstream& ss);
+    void Print() const;
     void AddPrograms(std::stringstream& ss,
-                     std::set<unsigned long>& programs_PIDs);
+                     std::map<ulong, PAT*>& pat_map);
 };
 
 
@@ -149,7 +153,6 @@ public:
     virtual int GetProgramSectionSize() const;
     int GetNestedSectionSize() const;
     void PrintES_Info(std::stringstream& ss,
-                      std::set<unsigned long>& programs_PIDs,
-                      std::set<unsigned long>& es_set);
+                      std::set<ulong>& es_set);
 };
 #endif
