@@ -47,6 +47,8 @@ public:
 class ParserFromCast : public TS_Parser {
     sockaddr_in *addr;
     ip_mreq *group;
+    char *ip_addr;
+    int port;
 public:
     ParserFromCast(char *a_source)
         : TS_Parser(a_source)
@@ -56,5 +58,6 @@ public:
     ~ParserFromCast();
 public:
     virtual bool Init();
+    void ParseSource();
 };
 #endif

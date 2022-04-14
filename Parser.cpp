@@ -1,9 +1,5 @@
 #include "Parser.hpp"
 
-#define PORT 6666
-#define GROUP_ADDR "225.1.1.1"
-#define INTERFACE_ADDR "9.5.1.1"
-
 
 TS_Parser::~TS_Parser()
 {
@@ -16,7 +12,9 @@ int TS_Parser::Parse() {
     packet = new TS_Packet();
     while (0 != (rc = read(fd, buffer, PACKET_SIZE))) {
         BinaryRepresentation(rc);
-        packet->FindPAT(ss, programs_PIDs);
+        PACKRES res = packet->FindPAT(ss, programs_PIDs);
+        if (res == PACKRES::NOT_SYNC_BYTE)
+            lseek(fd, 0, SEEK_SET); // To begining
     }
     
     lseek(fd, 0, SEEK_SET); // To begining
@@ -24,6 +22,10 @@ int TS_Parser::Parse() {
         BinaryRepresentation(rc);
         packet->FindPMT(ss, programs_PIDs, es_set);
     }
+
+    std::cout << "Number of elementary streams: "
+              << es_set.size() << '\n';
+
     return 0;
 }
 
@@ -70,25 +72,40 @@ bool ParserFromCast::Init()
     int opt = 1;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
+    ParseSource();
+
     addr->sin_family = AF_INET;
-    addr->sin_port = htons(PORT);
-    addr->sin_family = htonl(INADDR_ANY);
-    int res = bind(fd, (sockaddr *) &addr, sizeof(addr));
+    addr->sin_port = htons(port);
+    addr->sin_addr.s_addr = htonl(INADDR_ANY);
+    int res = bind(fd, (sockaddr *)addr, sizeof(*addr));
     if (res == -1) {
         perror("bind");
         return false;
     }
 
-    group->imr_multiaddr.s_addr = inet_addr(source);
-    group->imr_interface.s_addr = inet_addr(INADDR_ANY);
+    group->imr_multiaddr.s_addr = inet_addr(ip_addr);
+    group->imr_interface.s_addr = htonl(INADDR_ANY);
     res = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                     (char *)&group, sizeof(group));
+                     (char *)group, sizeof(*group));
     if (res == -1) {
         perror("multicast group");
         return false;
     }
 
     return true;
+}
+
+void ParserFromCast::ParseSource()
+{
+    int i;
+    int MAX_CHARS_IN_IPADDR = 16;
+    ip_addr = new char[MAX_CHARS_IN_IPADDR];
+    for (i = 0; *source != ':'; source++, i++)
+        ip_addr[i] = *source;
+    ip_addr[i] = '\0';
+    source++;
+
+    port = atoi(source);
 }
 
 ParserFromCast::~ParserFromCast()
