@@ -5,6 +5,7 @@
 
 
 typedef unsigned char ts_byte;
+typedef unsigned long ulong;
 
 
 class TS_Packet {
@@ -19,9 +20,9 @@ public:
 public:
     void PrintHeader() const;
     PACKRES FindPAT(std::stringstream& ss,
-                 std::set<unsigned long>& programs_PIDs);
+                    std::map<ulong, PAT*>& pat_map);
     void FindPMT(std::stringstream& ss,
-                 std::set<unsigned long>& programs_PIDs,
-                 std::set<unsigned long>& es_set);
+                 std::map<ulong, PAT*>& pat_map,
+                 std::set<ulong>& es_set);
 };
 #endif

@@ -18,7 +18,7 @@ TS_Packet::~TS_Packet()
 }
 
 PACKRES TS_Packet::FindPAT(std::stringstream& ss,
-                        std::set<unsigned long>& programs_PIDs)
+                           std::map<ulong, PAT*>& pat_map)
 {
     bool ok = ph->Set(ss);
     if (!ok)
@@ -31,28 +31,28 @@ PACKRES TS_Packet::FindPAT(std::stringstream& ss,
         psi->Set(ss);
 
     if (ph->IsPAT())
-        pat->AddPrograms(ss, programs_PIDs);
+        pat->AddPrograms(ss, pat_map);
 
     return PACKRES::SYNC_BYTE;
 }
 
 void TS_Packet::FindPMT(std::stringstream& ss,
-                        std::set<unsigned long>& programs_PIDs,
-                        std::set<unsigned long>& es_set)
+                        std::map<ulong, PAT*>& pat_map,
+                        std::set<ulong>& es_set)
 {
     bool ok = ph->Set(ss);
     if (!ok)
         return;
 
-    auto search = programs_PIDs.find(ph->GetPID());
-    if (search == programs_PIDs.end())
+    auto search = pat_map.find(ph->GetPID());
+    if (search == pat_map.end())
         return;
 
     if (ph->HasPayloadIndicator())
         psi->Set(ss);
 
     if (ph->IsInRange())
-        pmt->PrintES_Info(ss, programs_PIDs, es_set);
+        pmt->PrintES_Info(ss, es_set);
 }
 
 void TS_Packet::PrintHeader() const
