@@ -12,15 +12,19 @@ int TS_Parser::Parse() {
     packet = new TS_Packet();
     while (0 != (rc = read(fd, buffer, PACKET_SIZE))) {
         BinaryRepresentation(rc);
-        PACKRES res = packet->FindPAT(ss, programs_PIDs);
+        PACKRES res = packet->FindPAT(ss, pat_map);
         if (res != PACKRES::SYNC_BYTE)
             lseek(fd, -PACKET_SIZE, SEEK_CUR);
     }
+
+    PrintPAT();
     
+    std::cout << "--------- PMT ---------\n";
+
     lseek(fd, 0, SEEK_SET); // To begining
     while (0 != (rc = read(fd, buffer, PACKET_SIZE))) {
         BinaryRepresentation(rc);
-        packet->FindPMT(ss, programs_PIDs, es_set);
+        packet->FindPMT(ss, pat_map, es_set);
     }
 
     std::cout << "Number of elementary streams: "
@@ -42,6 +46,13 @@ void TS_Parser::BinaryRepresentation(int size)
     ss = std::stringstream(bin_repr);
 }
 
+void TS_Parser::PrintPAT() const
+{
+    std::cout << "========= PAT =========\n";
+    for (auto pat : pat_map)
+        pat.second->Print();
+    std::cout << "========= END =========\n\n";
+}
 
 /******************************************
     Initialize if file is passing

@@ -6,9 +6,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <iostream>
-#include <sstream>
-#include <bitset>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -23,9 +20,10 @@ protected:
     char bin_repr[PACKET_SIZE * N_BITS_IN_BYTE];
     std::stringstream ss;
     TS_Packet *packet;
-    std::set<unsigned long> programs_PIDs;
-    std::set<unsigned long> es_set;
+    std::map<ulong, PAT*> pat_map;
+    std::set<ulong> es_set;
 private:
+    void PrintPAT() const;
     void BinaryRepresentation(int size);
 public:
     TS_Parser(char *s) : source(s) {};
