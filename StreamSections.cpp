@@ -61,6 +61,7 @@ bool PacketHeader::Set(std::stringstream& ss)
     ss >> transport_scrambling_control;
     ss >> adaptation_field_control;
     ss >> continuity_counter;
+
     if (adaptation_field_control == ADAPT::ADAPT_ONLY ||
         adaptation_field_control == ADAPT::RESERVED)
         return false;
@@ -133,7 +134,7 @@ void PAT::AddPrograms(std::stringstream& ss,
         }
         else {
             ss >> program_map_PID;
-            programs_PIDs.insert(program_number.to_ulong());
+            programs_PIDs.insert(program_map_PID.to_ulong());
         }
     }
     ss >> CRC_32;
@@ -155,11 +156,7 @@ bool PMT::Set(std::stringstream& ss)
     ss >> reserved2;
     ss >> program_info_length;
 
-    ss >> stream_type;
-    ss >> reserved3;
-    ss >> elementary_PID;
-    ss >> reserved4;
-    ss >> ES_info_length;
+    ss >> CRC_32;
 
     return true;
 }
@@ -172,8 +169,14 @@ void PMT::PrintES_Info(std::stringstream& ss,
     if (!ok)
         return;
 
-    auto program_search = programs_PIDs.find(program_number.to_ulong());
-    if (program_search != programs_PIDs.end()) {
+    int section_size = GetProgramSectionSize();
+    for (; section_size > 0; section_size -= 5) {
+        ss >> stream_type;
+        ss >> reserved3;
+        ss >> elementary_PID;
+        ss >> reserved4;
+        ss >> ES_info_length;
+
         auto es_search = es_set.find(elementary_PID.to_ulong());
         if (es_search == es_set.end()) {
             es_set.insert(elementary_PID.to_ulong());
@@ -184,6 +187,8 @@ void PMT::PrintES_Info(std::stringstream& ss,
 
 void PMT::Print() const
 {
+    std::cout << "Program number: "
+              << program_number.to_ulong() << '\n';
     std::cout << "Elementary PID: "
               << elementary_PID.to_ulong() << '\n';
     std::cout << "ES info length: "

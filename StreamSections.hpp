@@ -27,6 +27,11 @@ enum ADAPT {
     ADAPT_PAYLOAD = 0b11,
 };
 
+enum PACKRES {
+    NOT_TABLE,
+    NOT_SYNC_BYTE,
+    PAT_OR_PMT,
+};
 
 class StreamSection {
 public:
@@ -67,6 +72,8 @@ public:
         { return payload_unit_start_indicator == 1; }
     unsigned long GetCC() const
         { return continuity_counter.to_ulong(); }
+    unsigned long GetPID() const { return PID.to_ulong(); }
+    unsigned long GetSyncByte() const { return sync_byte.to_ulong(); }
 
     // Print all bits
     void Print() const;
